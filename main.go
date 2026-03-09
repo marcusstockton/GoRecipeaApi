@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
+	chef "recipea.com/m/Chef"
 )
 
 var db, err = gorm.Open(sqlite.Open("database.db"), &gorm.Config{})
@@ -11,9 +12,10 @@ var db, err = gorm.Open(sqlite.Open("database.db"), &gorm.Config{})
 func main() {
 
 	router := gin.Default()
+	chef.Routes(router)
 	router.GET("/", homePage)
 
-	//db.AutoMigrate(&album{})
+	db.AutoMigrate(&chef.Chef{})
 
 	router.Run("localhost:8080")
 }
