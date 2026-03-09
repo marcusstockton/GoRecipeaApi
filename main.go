@@ -2,20 +2,21 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/glebarez/sqlite"
-	"gorm.io/gorm"
-	chef "recipea.com/m/Chef"
+	Chef "recipea.com/m/chef" // alias with capital C
+	"recipea.com/m/database"
+	"recipea.com/m/models"
 )
 
-var db, err = gorm.Open(sqlite.Open("database.db"), &gorm.Config{})
+func init() {
+	database.InitDB()
+	database.DB.AutoMigrate(&models.Chef{})
+}
 
 func main() {
 
 	router := gin.Default()
-	chef.Routes(router)
+	Chef.Routes(router)
 	router.GET("/", homePage)
-
-	db.AutoMigrate(&chef.Chef{})
 
 	router.Run("localhost:8080")
 }
