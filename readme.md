@@ -10,6 +10,7 @@ Recipea is a learning project to develop proficiency with Go while building a pr
 ## Features
 
 - **Chef Management**: User registration and authentication with chef profiles
+- jwt auth/access tokens
 - **Recipe Creation**: Create and manage recipes with flexible ingredients and step-by-step instructions
 - **Recipe Rating**: Thumbs up/down voting system for community feedback
 - **Image Uploads**: Support for recipe images and chef profile pictures
@@ -46,12 +47,14 @@ GoRecipeaApi/
 ## Installation
 
 1. Clone the repository:
+
    ```bash
    git clone <repository-url>
    cd GoRecipeaApi
    ```
 
 2. Install dependencies:
+
    ```bash
    go mod download
    ```
@@ -69,12 +72,15 @@ The API will start on `localhost:8080`
 ## API Endpoints
 
 ### Base URL
+
 `http://localhost:8080`
 
 ### Core Routes
+
 - `GET /` - Welcome/home page
 
 ### Chef Routes
+
 See `Chef/routes.go` for detailed endpoint documentation
 
 ## Features in Development
@@ -92,6 +98,7 @@ See `Chef/routes.go` for detailed endpoint documentation
 The application uses SQLite with automatic migration enabled. The database file (`database.db`) is created automatically on first run.
 
 Currently migrated models:
+
 - `Chef` - User/chef profiles
 
 ## License
