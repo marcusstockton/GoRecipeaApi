@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"recipea.com/m/database"
-	"recipea.com/m/models"
+	"recipea.com/m/domain"
 )
 
 func RequireAuth(c *gin.Context) {
@@ -50,22 +50,21 @@ func RequireAuth(c *gin.Context) {
 		}
 
 		// attach the user ID to the request context
-		var user models.Chef
-		database.DB.First(&user, "id = ?", claims["sub"])
+		var user domain.Chef
+		result := database.DB.Table("chefs").Where("id = ?", claims["sub"]).First(&user)
 
-		if user.ID == 0 {
+		if result.Error != nil || user.ID == 0 {
 			c.JSON(401, gin.H{
-				"error": "Invalid token: user not found",
+				"error": "Invalid token: user not found. Error: " + result.Error.Error(),
 			})
 			c.Abort()
 			return
-		}
 
+		}
 		c.Set("user", user)
 
 		// continue to the next handler
 		c.Next()
-
 	} else {
 		fmt.Println(err)
 	}

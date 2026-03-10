@@ -9,8 +9,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"recipea.com/m/database"
+	"recipea.com/m/domain"
 	"recipea.com/m/middleware"
-	"recipea.com/m/models"
 )
 
 type Handler struct {
@@ -35,14 +35,14 @@ func Routes(route *gin.Engine) {
 
 func (h *Handler) getChefs(c *gin.Context) {
 
-	var chefs []models.Chef
+	var chefs []domain.Chef
 	h.DB.Find(&chefs)
 	c.IndentedJSON(http.StatusOK, chefs)
 }
 
 func (h *Handler) createChef(c *gin.Context) {
 	// Parse the request body into a Chef struct
-	var body models.Chef
+	var body domain.Chef
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(400, gin.H{
 			"error": err.Error(),
@@ -60,7 +60,7 @@ func (h *Handler) createChef(c *gin.Context) {
 	}
 
 	// create the chef in the database
-	chef := models.Chef{
+	chef := domain.Chef{
 		FirstName: body.FirstName,
 		LastName:  body.LastName,
 		Email:     body.Email,
@@ -116,7 +116,7 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 
 	// Look up the requested user
-	var chef models.Chef
+	var chef domain.Chef
 	h.DB.First(&chef, "email = ?", body.Email)
 
 	if chef.ID == 0 {
@@ -157,7 +157,7 @@ func (h *Handler) Login(c *gin.Context) {
 }
 
 func (h *Handler) Validate(c *gin.Context) {
-	var user = c.MustGet("user").(models.Chef)
+	var user = c.MustGet("user").(domain.Chef)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "I'm logged in",
 		"chef":    user,

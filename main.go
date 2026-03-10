@@ -2,14 +2,14 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
-	Chef "recipea.com/m/chef" // alias with capital C
+	"recipea.com/m/Chef"
 	"recipea.com/m/database"
-	"recipea.com/m/models"
+	"recipea.com/m/domain"
 )
 
 func init() {
 	database.InitDB()
-	database.DB.AutoMigrate(&models.Chef{})
+	database.DB.AutoMigrate(&domain.Chef{})
 }
 
 func main() {
