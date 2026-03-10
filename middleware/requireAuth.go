@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"fmt"
-	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -35,7 +35,7 @@ func RequireAuth(c *gin.Context) {
 		return hmacSampleSecret, nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 	if err != nil {
-		log.Fatal(err)
+		c.AbortWithStatus(http.StatusUnauthorized)
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {

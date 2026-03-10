@@ -1,4 +1,4 @@
-package chef
+package Chef
 
 import (
 	"net/http"
@@ -157,7 +157,9 @@ func (h *Handler) Login(c *gin.Context) {
 }
 
 func (h *Handler) Validate(c *gin.Context) {
+	var user = c.MustGet("user").(models.Chef)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "I'm logged in",
+		"chef":    user,
 	})
 }
