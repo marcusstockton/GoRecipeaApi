@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"recipea.com/m/database"
-	"recipea.com/m/domain"
+	domain "recipea.com/m/shared"
 )
 
 func RequireAuth(c *gin.Context) {

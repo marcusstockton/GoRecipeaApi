@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"recipea.com/m/Chef"
 	"recipea.com/m/database"
-	"recipea.com/m/domain"
+	domain "recipea.com/m/shared"
 )
 
 func init() {

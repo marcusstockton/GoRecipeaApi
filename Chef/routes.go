@@ -9,18 +9,36 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"recipea.com/m/database"
-	"recipea.com/m/domain"
 	"recipea.com/m/middleware"
+	domain "recipea.com/m/shared"
 )
 
 type Handler struct {
-	DB *gorm.DB
+	DB      *gorm.DB
+	Service *Service
 }
 
 var hmacSampleSecret = []byte("your-secret-key") // TODO: move this to an environment variable. Remove duplicate in requireAuth.go
 
+func sanitizeChef(c domain.Chef) gin.H {
+	return gin.H{
+		"id":         c.ID,
+		"first_name": c.FirstName,
+		"last_name":  c.LastName,
+		"email":      c.Email,
+	}
+}
+
+func sanitizeChefs(chefs []domain.Chef) []gin.H {
+	out := make([]gin.H, 0, len(chefs))
+	for _, chef := range chefs {
+		out = append(out, sanitizeChef(chef))
+	}
+	return out
+}
+
 func Routes(route *gin.Engine) {
-	handler := &Handler{DB: database.DB}
+	handler := &Handler{DB: database.DB, Service: NewService(database.DB)}
 	chef := route.Group("/chef")
 	{
 		chef.GET("/", handler.getChefs)
@@ -34,10 +52,12 @@ func Routes(route *gin.Engine) {
 }
 
 func (h *Handler) getChefs(c *gin.Context) {
-
-	var chefs []domain.Chef
-	h.DB.Find(&chefs)
-	c.IndentedJSON(http.StatusOK, chefs)
+	chefs, err := h.Service.GetAllChefs()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to fetch chefs"})
+		return
+	}
+	c.IndentedJSON(http.StatusOK, sanitizeChefs(chefs))
 }
 
 func (h *Handler) createChef(c *gin.Context) {
@@ -50,56 +70,77 @@ func (h *Handler) createChef(c *gin.Context) {
 		return
 	}
 
-	// Hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
-	if err != nil {
-		c.JSON(500, gin.H{
-			"error": "Failed to hash password",
-		})
-		return
-	}
-
-	// create the chef in the database
-	chef := domain.Chef{
+	created, err := h.Service.CreateChef(domain.Chef{
 		FirstName: body.FirstName,
 		LastName:  body.LastName,
 		Email:     body.Email,
-		Password:  string(hashedPassword),
-	}
-
-	result := h.DB.Create(&chef)
-	if result.Error != nil {
-		c.JSON(500, gin.H{
-			"error": "Failed to create chef",
-		})
+		Password:  body.Password,
+	})
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to create chef"})
 		return
 	}
-
-	// respond with the created chef
-	c.JSON(201, gin.H{
-		"message": "Chef created",
-		"chef":    chef,
-	})
+	c.JSON(201, gin.H{"message": "Chef created", "chef": sanitizeChef(created)})
 
 }
 func (h *Handler) getChef(c *gin.Context) {
 	id := c.Param("id")
-	c.JSON(200, gin.H{
-		"message": "Get chef with id " + id,
-	})
+	chef, err := h.Service.GetChefByID(id)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Chef not found"})
+		return
+	}
+	c.JSON(200, gin.H{"chef": sanitizeChef(chef)})
 }
 
 func (h *Handler) updateChef(c *gin.Context) {
 	id := c.Param("id")
-	c.JSON(200, gin.H{
-		"message": "Update chef with id " + id,
-	})
+	var body domain.Chef
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	updates := map[string]any{}
+	if body.FirstName != "" {
+		updates["first_name"] = body.FirstName
+	}
+	if body.LastName != "" {
+		updates["last_name"] = body.LastName
+	}
+	if body.Email != "" {
+		updates["email"] = body.Email
+	}
+	if body.Password != "" {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(body.Password), bcrypt.DefaultCost)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to hash password"})
+			return
+		}
+		updates["password"] = string(hashedPassword)
+	}
+
+	if len(updates) == 0 {
+		c.JSON(400, gin.H{"error": "No valid fields provided to update"})
+		return
+	}
+
+	updatedChef, err := h.Service.UpdateChef(id, updates)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to update chef"})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Updated chef with id " + id, "chef": sanitizeChef(updatedChef)})
 }
+
 func (h *Handler) deleteChef(c *gin.Context) {
 	id := c.Param("id")
-	c.JSON(200, gin.H{
-		"message": "Delete chef with id " + id,
-	})
+	if err := h.Service.DeleteChef(id); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to delete chef"})
+		return
+	}
+	c.JSON(200, gin.H{"message": "Deleted chef with id " + id})
 }
 
 func (h *Handler) Login(c *gin.Context) {
@@ -115,19 +156,14 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	// Look up the requested user
-	var chef domain.Chef
-	h.DB.First(&chef, "email = ?", body.Email)
-
-	if chef.ID == 0 {
-		c.JSON(404, gin.H{
-			"error": "Chef not found",
-		})
+	chef, err := h.Service.FindChefByEmail(body.Email)
+	if err != nil || chef.ID == 0 {
+		c.JSON(404, gin.H{"error": "Chef not found"})
 		return
 	}
 
 	// Compare the provided password with the stored hashed password
-	err := bcrypt.CompareHashAndPassword([]byte(chef.Password), []byte(body.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(chef.Password), []byte(body.Password))
 	if err != nil {
 		c.JSON(401, gin.H{
 			"error": "Invalid email or password",
@@ -160,6 +196,6 @@ func (h *Handler) Validate(c *gin.Context) {
 	var user = c.MustGet("user").(domain.Chef)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "I'm logged in",
-		"chef":    user,
+		"chef":    sanitizeChef(user),
 	})
 }
