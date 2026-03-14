@@ -13,6 +13,7 @@ import (
 
 func RequireAuth(c *gin.Context) {
 	fmt.Println("In Middleware")
+	var start = time.Now()
 
 	// Get the token from the Authorization header
 	tokenString := c.GetHeader("Authorization")
@@ -64,6 +65,7 @@ func RequireAuth(c *gin.Context) {
 		c.Set("user", user)
 
 		// continue to the next handler
+		fmt.Println("Time taken:", time.Since(start))
 		c.Next()
 	} else {
 		fmt.Println(err)
