@@ -31,13 +31,46 @@ Recipea is a learning project to develop proficiency with Go while building a pr
 
 ```
 GoRecipeaApi/
-├── main.go              # Application entry point
-├── go.mod               # Go module definition
-├── readme.md            # This file
-└── Chef/
-    ├── models.go        # Chef data model and GORM definitions
-    └── routes.go        # Chef API routes
+├── main.go
+├── go.mod
+├── readme.md
+├── database/
+│   └── db.go
+├── domain/
+│   └── chef/
+│       ├── chef.go
+│       ├── errors.go
+│       └── repository.go
+├── application/
+│   └── chef/
+│       ├── service.go
+│       └── update.go
+├── infrastructure/
+│   ├── auth/
+│   │   └── jwt_provider.go
+│   └── persistence/
+│       └── chef_repository.go
+├── interfaces/
+│   └── http/
+│       ├── chef_handler.go
+│       ├── auth_middleware.go
+│       └── chef_handler_test.go
+├── middleware/
+│   └── requireAuth.go
+└── shared/
+    └── chef.go
 ```
+
+## DDD migration note
+
+The project has been refactored from legacy `Chef/` route/service code into a DDD-style layered architecture:
+
+- **Domain**: `domain/chef` contains the Chef entity behavior and typed domain errors.
+- **Application**: `application/chef` implements use cases like create, update, list, login with explicit request/response objects.
+- **Infrastructure**: `infrastructure/persistence` and `infrastructure/auth` provide concrete DB and JWT adapters.
+- **Interface / Adapters**: `interfaces/http` implements Gin HTTP controllers and middleware wiring to application services.
+
+The old `Chef/` package used in earlier versions has been removed and is no longer required.
 
 ## Prerequisites
 
@@ -81,7 +114,20 @@ The API will start on `localhost:8080`
 
 ### Chef Routes
 
-See `Chef/routes.go` for detailed endpoint documentation
+See `interfaces/http/chef_handler.go` for detailed endpoint implementation.
+
+## How to extend (DDD)
+
+To add new domain entities (e.g. Recipe aggregate, Rating domain):
+
+1. Add an aggregate in `domain/recipe/` (entity methods, validation, domain errors).
+2. Define repository interface in `domain/recipe/repository.go`.
+3. Implement repository adapter in `infrastructure/persistence/` (GORM or other DB adapter).
+4. Add use-case services in `application/recipe/` (create/update/get/list) that depend only on domain and repository interfaces.
+5. Add HTTP handlers in `interfaces/http/` for request/response DTOs and call application services.
+6. Wire in `main.go` with `NewRecipeRepository(...)`, `NewRecipeService(...)`, and route registration.
+
+This keeps behavior and business rules in domain/application layers and isolates infra/HTTP details.
 
 ## Features in Development
 
