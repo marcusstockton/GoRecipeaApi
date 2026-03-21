@@ -14,7 +14,7 @@ import (
 
 func init() {
 	database.InitDB()
-	database.DB.AutoMigrate(&chef.Chef{}, &recipe.Recipe{})
+	database.DB.AutoMigrate(&chef.Chef{}, &recipe.Recipe{}, &recipe.Ingredient{}, &recipe.Step{})
 }
 
 func main() {
