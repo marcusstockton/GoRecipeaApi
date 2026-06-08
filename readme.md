@@ -97,7 +97,7 @@ The old `Chef/` package used in earlier versions has been removed and is no long
 Run the application:
 
 ```bash
-go run .\main.go
+go run .\cmd\api\main.go
 ```
 
 The API will start on `localhost:8080`
