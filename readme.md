@@ -31,46 +31,54 @@ Recipea is a learning project to develop proficiency with Go while building a pr
 
 ```
 GoRecipeaApi/
-├── main.go
 ├── go.mod
 ├── readme.md
+├── cmd/
+│   └── api/
+│       └── main.go
 ├── database/
 │   └── db.go
 ├── domain/
-│   └── chef/
-│       ├── chef.go
+│   ├── chef/
+│   │   ├── chef.go
+│   │   ├── errors.go
+│   │   └── repository.go
+│   └── recipe/
+│       ├── recipe.go
 │       ├── errors.go
 │       └── repository.go
 ├── application/
-│   └── chef/
-│       ├── service.go
-│       └── update.go
+│   ├── chef/
+│   │   ├── service.go
+│   │   └── update.go
+│   └── recipe/
+│       └── service.go
 ├── infrastructure/
 │   ├── auth/
 │   │   └── jwt_provider.go
 │   └── persistence/
-│       └── chef_repository.go
+│       ├── chef_repository.go
+│       └── recipe_repository.go
 ├── interfaces/
 │   └── http/
-│       ├── chef_handler.go
 │       ├── auth_middleware.go
-│       └── chef_handler_test.go
+│       ├── chef_handler.go
+│       ├── chef_handler_test.go
+│       └── recipe_handler.go
 ├── middleware/
 │   └── requireAuth.go
 └── shared/
     └── chef.go
 ```
 
-## DDD migration note
+## DDD Architecture
 
-The project has been refactored from legacy `Chef/` route/service code into a DDD-style layered architecture:
+The project follows a Domain-Driven Design (DDD) layered architecture:
 
-- **Domain**: `domain/chef` contains the Chef entity behavior and typed domain errors.
-- **Application**: `application/chef` implements use cases like create, update, list, login with explicit request/response objects.
-- **Infrastructure**: `infrastructure/persistence` and `infrastructure/auth` provide concrete DB and JWT adapters.
-- **Interface / Adapters**: `interfaces/http` implements Gin HTTP controllers and middleware wiring to application services.
-
-The old `Chef/` package used in earlier versions has been removed and is no longer required.
+- **Domain**: `domain/chef` and `domain/recipe` contain entity behavior, validation rules, and typed domain errors.
+- **Application**: `application/chef` and `application/recipe` implement use cases (create, update, list, login, etc.) with explicit request/response DTOs.
+- **Infrastructure**: `infrastructure/persistence` provides database adapters using GORM; `infrastructure/auth` provides JWT authentication.
+- **Interface / Adapters**: `interfaces/http` implements Gin HTTP handlers and middleware, wiring requests to application services.
 
 ## Prerequisites
 
@@ -97,7 +105,13 @@ The old `Chef/` package used in earlier versions has been removed and is no long
 Run the application:
 
 ```bash
-go run .\cmd\api\main.go
+go run ./cmd/api/main.go
+```
+
+Or from the cmd/api directory:
+
+```bash
+cd cmd/api && go run main.go
 ```
 
 The API will start on `localhost:8080`
@@ -111,6 +125,8 @@ The API will start on `localhost:8080`
 ### Core Routes
 
 - `GET /` - Welcome/home page
+- `POST /chef/login` - Chef authentication
+- `GET /chef/validate` - Validate JWT token (requires auth)
 
 ### Chef Routes
 
@@ -216,28 +232,53 @@ Authorization: Bearer <jwt_token>
 
 Obtain a token by logging in via `POST /chef/login`.
 
-## How to extend (DDD)
+## How to Extend (DDD Pattern)
 
-To add new domain entities (e.g. Recipe aggregate, Rating domain):
+To add new domain entities (e.g., Rating, Comment, Category aggregates):
 
-1. Add an aggregate in `domain/recipe/` (entity methods, validation, domain errors).
-2. Define repository interface in `domain/recipe/repository.go`.
-3. Implement repository adapter in `infrastructure/persistence/` (GORM or other DB adapter).
-4. Add use-case services in `application/recipe/` (create/update/get/list) that depend only on domain and repository interfaces.
-5. Add HTTP handlers in `interfaces/http/` for request/response DTOs and call application services.
-6. Wire in `main.go` with `NewRecipeRepository(...)`, `NewRecipeService(...)`, and route registration.
+1. **Define the Domain** - Create an aggregate in `domain/{entity}/` with:
+   - `{entity}.go` - Entity struct, value objects, and business logic
+   - `repository.go` - Repository interface (contracts, not implementation)
+   - `errors.go` - Domain-specific errors
 
-This keeps behavior and business rules in domain/application layers and isolates infra/HTTP details.
+2. **Implement Repositories** - Create adapter in `infrastructure/persistence/{entity}_repository.go`:
+   - Implements the repository interface using GORM
+   - Handles database operations
+   - Translates between domain models and database models
 
-## Features in Development
+3. **Add Use Cases** - Create services in `application/{entity}/`:
+   - Implements business operations (create, update, list, delete, etc.)
+   - Depends only on domain and repository interfaces
+   - Contains application-specific logic and DTOs
 
-- [x] Recipe creation, update, and deletion endpoints
-- [x] Chef profile management
-- [x] User authentication and authorization
+4. **Expose via HTTP** - Create handlers in `interfaces/http/{entity}_handler.go`:
+   - Defines request/response DTOs
+   - Handles HTTP concerns (status codes, headers)
+   - Calls application services
+
+5. **Wire It Together** - Update `cmd/api/main.go`:
+   - Create repository instance: `NewRecipeRepository(db)`
+   - Create service instance: `NewRecipeService(repository)`
+   - Register HTTP routes and handlers
+
+This keeps domain behavior isolated, makes testing easier, and maintains a clear separation of concerns.
+
+## Implementation Status
+
+### Implemented
+- [x] Chef profile management (create, read, update)
+- [x] Chef authentication (registration and JWT-based login)
+- [x] Recipe CRUD operations (create, read, update, delete)
+- [x] Recipe ingredient and step structure
+- [x] Authorization middleware for protected endpoints
+- [x] DDD layered architecture (domain, application, infrastructure, interfaces)
+
+### In Development
 - [ ] Recipe rating/voting system
-- [ ] Image upload functionality
+- [ ] Image upload functionality (recipes & chef profiles)
 - [ ] Recipe search and filtering
 - [ ] Recipe categories/tags
+- [ ] Review/comment system
 
 ## Database
 
@@ -246,6 +287,7 @@ The application uses SQLite with automatic migration enabled. The database file 
 Currently migrated models:
 
 - `Chef` - User/chef profiles
+- `Recipe` - Recipe documents with ingredients and steps
 
 ## License
 
