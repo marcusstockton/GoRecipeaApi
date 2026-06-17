@@ -114,7 +114,107 @@ The API will start on `localhost:8080`
 
 ### Chef Routes
 
-See `interfaces/http/chef_handler.go` for detailed endpoint implementation.
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---|
+| GET | `/chef` | List all chefs | No |
+| GET | `/chef/:id` | Get a specific chef by ID | No |
+| POST | `/chef` | Create a new chef (register) | No |
+| PUT | `/chef/:id` | Update chef profile | No |
+| POST | `/chef/login` | Login and receive JWT token | No |
+| GET | `/chef/validate` | Validate JWT token | Yes |
+
+#### Chef Request/Response Examples
+
+**Create Chef (POST /chef)**
+```json
+{
+  "first_name": "Gordon",
+  "last_name": "Ramsay",
+  "email": "gordon@example.com",
+  "password": "securePassword123"
+}
+```
+
+**Login (POST /chef/login)**
+```json
+{
+  "email": "gordon@example.com",
+  "password": "securePassword123"
+}
+```
+
+**Update Chef (PUT /chef/:id)**
+```json
+{
+  "first_name": "Gordon",
+  "last_name": "Ramsay",
+  "email": "gordon@example.com",
+  "password": "newPassword123"
+}
+```
+
+### Recipe Routes
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---|
+| GET | `/recipe` | List all recipes | No |
+| GET | `/recipe/:id` | Get a specific recipe by ID | No |
+| POST | `/recipe` | Create a new recipe | Yes |
+| PUT | `/recipe/:id` | Update a recipe | Yes |
+| DELETE | `/recipe/:id` | Delete a recipe | Yes |
+
+#### Recipe Request/Response Examples
+
+**Create Recipe (POST /recipe)**
+```json
+{
+  "title": "Chocolate Cake",
+  "description": "A delicious homemade chocolate cake",
+  "ingredients": [
+    {
+      "quantity": "2",
+      "unit": "cups",
+      "name": "flour",
+      "preparation": "sifted"
+    },
+    {
+      "quantity": "1",
+      "unit": "cup",
+      "name": "sugar"
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "action": "Preheat oven to 350°F"
+    },
+    {
+      "order": 2,
+      "action": "Mix dry ingredients in a bowl"
+    }
+  ]
+}
+```
+
+**Update Recipe (PUT /recipe/:id)**
+```json
+{
+  "title": "Chocolate Cake",
+  "description": "A delicious homemade chocolate cake",
+  "ingredients": [...],
+  "steps": [...]
+}
+```
+
+### Authentication
+
+Protected endpoints require a JWT token in the `Authorization` header:
+
+```
+Authorization: Bearer <jwt_token>
+```
+
+Obtain a token by logging in via `POST /chef/login`.
 
 ## How to extend (DDD)
 
@@ -131,13 +231,13 @@ This keeps behavior and business rules in domain/application layers and isolates
 
 ## Features in Development
 
-- [ ] Recipe creation, update, and deletion endpoints
+- [x] Recipe creation, update, and deletion endpoints
+- [x] Chef profile management
+- [x] User authentication and authorization
 - [ ] Recipe rating/voting system
 - [ ] Image upload functionality
 - [ ] Recipe search and filtering
-- [ ] Chef profile management
 - [ ] Recipe categories/tags
-- [ ] User authentication and authorization
 
 ## Database
 
