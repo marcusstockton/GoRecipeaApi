@@ -1,0 +1,126 @@
+### Health check
+GET http://localhost:8080/
+Accept: application/json
+
+### List all chefs
+GET http://localhost:8080/chef
+Accept: application/json
+
+### Get chef by ID
+GET http://localhost:8080/chef/1
+Accept: application/json
+
+### Register a chef
+POST http://localhost:8080/chef
+Content-Type: application/json
+
+{
+  "first_name": "Gordon",
+  "last_name": "Ramsay",
+  "email": "gordon@example.com",
+  "password": "securePassword123"
+}
+
+### Login chef
+POST http://localhost:8080/chef/login
+Content-Type: application/json
+
+{
+  "email": "gordon@example.com",
+  "password": "securePassword123"
+}
+
+### Validate JWT token
+GET http://localhost:8080/chef/validate
+Authorization: Bearer <jwt_token>
+Accept: application/json
+
+### Update chef
+PUT http://localhost:8080/chef/1
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+
+{
+  "first_name": "Gordon",
+  "last_name": "Ramsay",
+  "email": "gordon@example.com",
+  "password": "newPassword123"
+}
+
+### List all recipes
+GET http://localhost:8080/recipe
+Accept: application/json
+
+### Get recipe by ID
+GET http://localhost:8080/recipe/1
+Accept: application/json
+
+### Create a recipe
+POST http://localhost:8080/recipe
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+
+{
+  "title": "Chocolate Cake",
+  "description": "A delicious homemade chocolate cake",
+  "ingredients": [
+    {
+      "quantity": "2",
+      "unit": "cups",
+      "name": "flour",
+      "preparation": "sifted"
+    },
+    {
+      "quantity": "1",
+      "unit": "cup",
+      "name": "sugar"
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "action": "Preheat oven to 350°F"
+    },
+    {
+      "order": 2,
+      "action": "Mix dry ingredients in a bowl"
+    }
+  ]
+}
+
+### Update a recipe
+PUT http://localhost:8080/recipe/1
+Content-Type: application/json
+Authorization: Bearer <jwt_token>
+
+{
+  "title": "Chocolate Cake",
+  "description": "A delicious homemade chocolate cake",
+  "ingredients": [
+    {
+      "quantity": "2",
+      "unit": "cups",
+      "name": "flour",
+      "preparation": "sifted"
+    },
+    {
+      "quantity": "1",
+      "unit": "cup",
+      "name": "sugar"
+    }
+  ],
+  "steps": [
+    {
+      "order": 1,
+      "action": "Preheat oven to 350°F"
+    },
+    {
+      "order": 2,
+      "action": "Mix dry ingredients in a bowl"
+    }
+  ]
+}
+
+### Delete a recipe
+DELETE http://localhost:8080/recipe/1
+Authorization: Bearer <jwt_token>

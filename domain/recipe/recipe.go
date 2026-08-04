@@ -20,9 +20,9 @@ type Step struct {
 
 type Recipe struct {
 	ID          uint         `gorm:"primaryKey" json:"id"`
-	Title       string       `json:"title"`
+	Title       string       `gorm:"size:255;not null;uniqueIndex:idx_recipe_owner_title" json:"title"`
 	Description string       `json:"description"`
-	OwnedBy     uint         `json:"owned_by"`
+	OwnedBy     uint         `gorm:"not null;uniqueIndex:idx_recipe_owner_title" json:"owned_by"`
 	Ingredients []Ingredient `json:"ingredients" gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE"`
 	Steps       []Step       `json:"steps" gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE"`
 	CreatedAt   time.Time    `json:"created_at"`

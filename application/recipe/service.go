@@ -1,6 +1,10 @@
 package recipe
 
-import domainrecipe "recipea.com/m/domain/recipe"
+import (
+	"strings"
+
+	domainrecipe "recipea.com/m/domain/recipe"
+)
 
 type CreateRecipeRequest struct {
 	Title       string
@@ -41,6 +45,17 @@ func (s *RecipeService) CreateRecipe(req CreateRecipeRequest) (*RecipeResponse, 
 	if err != nil {
 		return nil, err
 	}
+
+	existingRecipes, err := s.Repo.List()
+	if err != nil {
+		return nil, err
+	}
+	for _, existing := range existingRecipes {
+		if existing.OwnedBy == r.OwnedBy && strings.EqualFold(strings.TrimSpace(existing.Title), strings.TrimSpace(r.Title)) {
+			return nil, domainrecipe.ErrDuplicateRecipe
+		}
+	}
+
 	if err := s.Repo.Save(r); err != nil {
 		return nil, err
 	}
