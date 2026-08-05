@@ -1,3 +1,5 @@
+@jwt_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODU5NDM3NDgsInN1YiI6MX0.Jl-ekADDn6fxCUJUX4lSgmcKTjP7mDqDoTpzLeWlpxg
+
 ### Health check
 GET http://localhost:8080/
 Accept: application/json
@@ -32,13 +34,13 @@ Content-Type: application/json
 
 ### Validate JWT token
 GET http://localhost:8080/chef/validate
-Authorization: Bearer <jwt_token>
+Authorization: Bearer {{jwt_token}}
 Accept: application/json
 
 ### Update chef
 PUT http://localhost:8080/chef/1
 Content-Type: application/json
-Authorization: Bearer <jwt_token>
+Authorization: Bearer {{jwt_token}}
 
 {
   "first_name": "Gordon",
@@ -58,7 +60,7 @@ Accept: application/json
 ### Create a recipe
 POST http://localhost:8080/recipe
 Content-Type: application/json
-Authorization: Bearer <jwt_token>
+Authorization: Bearer {{jwt_token}}
 
 {
   "title": "Chocolate Cake",
@@ -91,7 +93,7 @@ Authorization: Bearer <jwt_token>
 ### Update a recipe
 PUT http://localhost:8080/recipe/1
 Content-Type: application/json
-Authorization: Bearer <jwt_token>
+Authorization: Bearer {{jwt_token}}
 
 {
   "title": "Chocolate Cake",
@@ -123,4 +125,44 @@ Authorization: Bearer <jwt_token>
 
 ### Delete a recipe
 DELETE http://localhost:8080/recipe/1
-Authorization: Bearer <jwt_token>
+Authorization: Bearer {{jwt_token}}
+
+### Like a recipe
+POST http://localhost:8080/recipe/1/like
+Authorization: Bearer {{jwt_token}}
+Accept: application/json
+
+### Remove your like from a recipe
+DELETE http://localhost:8080/recipe/1/like
+Authorization: Bearer {{jwt_token}}
+Accept: application/json
+
+### Add a comment to a recipe
+POST http://localhost:8080/recipe/1/comment
+Content-Type: application/json
+Authorization: Bearer {{jwt_token}}
+Accept: application/json
+
+{
+  "content": "This recipe looks amazing!"
+}
+
+### Reply to a comment
+POST http://localhost:8080/recipe/1/comment
+Content-Type: application/json
+Authorization: Bearer {{jwt_token}}
+Accept: application/json
+
+{
+  "content": "Thanks, I appreciate the feedback!",
+  "parent_id": 1
+}
+
+### List comments for a recipe
+GET http://localhost:8080/recipe/1/comments
+Accept: application/json
+
+### Delete your comment from a recipe
+DELETE http://localhost:8080/comment/1
+Authorization: Bearer {{jwt_token}}
+Accept: application/json
