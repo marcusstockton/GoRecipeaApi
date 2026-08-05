@@ -2,8 +2,6 @@ package database
 
 import (
 	"errors"
-	"path/filepath"
-	"runtime"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
@@ -15,9 +13,7 @@ import (
 var DB *gorm.DB
 
 func InitDB() {
-	_, currentFile, _, _ := runtime.Caller(0)
-	projectRoot := filepath.Dir(filepath.Dir(currentFile))
-	dbPath := filepath.Join(projectRoot, "database.db")
+	dbPath := "database/database.db"
 
 	var err error
 	DB, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{
