@@ -10,10 +10,12 @@ Recipea is a learning project to develop proficiency with Go while building a pr
 ## Features
 
 - **Chef Management**: User registration and authentication with chef profiles
-- jwt auth/access tokens
+- **JWT auth/access tokens**: Secure access for protected endpoints
 - **Recipe Creation**: Create and manage recipes with flexible ingredients and step-by-step instructions
-- **Recipe Rating**: Thumbs up/down voting system for community feedback
-- **Image Uploads**: Support for recipe images and chef profile pictures
+- **Recipe Engagement**: Recipes now support likes and comments from other chefs
+  - One chef can like a recipe once
+  - Chefs cannot like their own recipes
+  - Comments can be added to recipes and replies can be posted to comments via `parent_id`
 - **Flexible Ingredients**: Support for various measurement types (tablespoons, grams, milliliters, whole items, etc.)
   - Example: "1 tbsp honey", "100g spinach", "1 lemon", "75ml dry white wine", "2 sticks celery"
 - **Recipe Structure**:
@@ -178,6 +180,11 @@ The API will start on `localhost:8080`
 | POST | `/recipe` | Create a new recipe | Yes |
 | PUT | `/recipe/:id` | Update a recipe | Yes |
 | DELETE | `/recipe/:id` | Delete a recipe | Yes |
+| POST | `/recipe/:id/like` | Like a recipe | Yes |
+| DELETE | `/recipe/:id/like` | Remove your like from a recipe | Yes |
+| POST | `/recipe/:id/comment` | Add a comment or reply to a comment | Yes |
+| GET | `/recipe/:id/comments` | List comments for a recipe | No |
+| DELETE | `/comment/:commentID` | Delete your own comment | Yes |
 
 #### Recipe Request/Response Examples
 
@@ -219,6 +226,48 @@ The API will start on `localhost:8080`
   "description": "A delicious homemade chocolate cake",
   "ingredients": [...],
   "steps": [...]
+}
+```
+
+**Recipe response example**
+```json
+{
+  "id": 1,
+  "title": "Chocolate Cake",
+  "description": "A delicious homemade chocolate cake",
+  "owned_by": 1,
+  "ingredients": [...],
+  "steps": [...],
+  "like_count": 3
+}
+```
+
+**Add a comment (POST /recipe/:id/comment)**
+```json
+{
+  "content": "This recipe looks amazing!"
+}
+```
+
+**Reply to a comment (POST /recipe/:id/comment)**
+```json
+{
+  "content": "Thanks, I appreciate the feedback!",
+  "parent_id": 1
+}
+```
+
+**List comments (GET /recipe/:id/comments)**
+```json
+{
+  "comments": [
+    {
+      "id": 1,
+      "recipe_id": 1,
+      "chef_id": 2,
+      "content": "This recipe looks amazing!"
+    }
+  ]
 }
 ```
 
@@ -270,15 +319,16 @@ This keeps domain behavior isolated, makes testing easier, and maintains a clear
 - [x] Chef authentication (registration and JWT-based login)
 - [x] Recipe CRUD operations (create, read, update, delete)
 - [x] Recipe ingredient and step structure
+- [x] Recipe likes and comments
+- [x] Comment replies via parent comment IDs
 - [x] Authorization middleware for protected endpoints
 - [x] DDD layered architecture (domain, application, infrastructure, interfaces)
 
 ### In Development
-- [ ] Recipe rating/voting system
 - [ ] Image upload functionality (recipes & chef profiles)
 - [ ] Recipe search and filtering
 - [ ] Recipe categories/tags
-- [ ] Review/comment system
+- [ ] Notification system for comments and likes
 
 ## Database
 
@@ -288,6 +338,8 @@ Currently migrated models:
 
 - `Chef` - User/chef profiles
 - `Recipe` - Recipe documents with ingredients and steps
+- `RecipeLike` - Tracks which chefs liked which recipes
+- `RecipeComment` - Stores recipe comments and reply threads
 
 ## License
 

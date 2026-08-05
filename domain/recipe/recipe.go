@@ -11,6 +11,22 @@ type Ingredient struct {
 	Preparation string `json:"preparation,omitempty"`
 }
 
+type RecipeLike struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	RecipeID  uint      `gorm:"not null;uniqueIndex:idx_recipe_like_recipe_chef" json:"recipe_id"`
+	ChefID    uint      `gorm:"not null;uniqueIndex:idx_recipe_like_recipe_chef" json:"chef_id"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type RecipeComment struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	RecipeID  uint      `json:"recipe_id"`
+	ChefID    uint      `json:"chef_id"`
+	ParentID  *uint     `json:"parent_id,omitempty"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type Step struct {
 	ID       uint   `gorm:"primaryKey" json:"id"`
 	RecipeID uint   `json:"-"`
@@ -19,13 +35,15 @@ type Step struct {
 }
 
 type Recipe struct {
-	ID          uint         `gorm:"primaryKey" json:"id"`
-	Title       string       `gorm:"size:255;not null;uniqueIndex:idx_recipe_owner_title" json:"title"`
-	Description string       `json:"description"`
-	OwnedBy     uint         `gorm:"not null;uniqueIndex:idx_recipe_owner_title" json:"owned_by"`
-	Ingredients []Ingredient `json:"ingredients" gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE"`
-	Steps       []Step       `json:"steps" gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE"`
-	CreatedAt   time.Time    `json:"created_at"`
+	ID          uint            `gorm:"primaryKey" json:"id"`
+	Title       string          `gorm:"size:255;not null;uniqueIndex:idx_recipe_owner_title" json:"title"`
+	Description string          `json:"description"`
+	OwnedBy     uint            `gorm:"not null;uniqueIndex:idx_recipe_owner_title" json:"owned_by"`
+	Ingredients []Ingredient    `json:"ingredients" gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE"`
+	Steps       []Step          `json:"steps" gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE"`
+	CreatedAt   time.Time       `json:"created_at"`
+	Likes       []RecipeLike    `json:"likes" gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE"`
+	Comments    []RecipeComment `json:"comments" gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE"`
 }
 
 func NewRecipe(title, description string, ownedBy uint, ingredients []Ingredient, steps []Step) (*Recipe, error) {
