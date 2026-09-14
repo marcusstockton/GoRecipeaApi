@@ -28,11 +28,31 @@ func setupRecipeRouterTest(t *testing.T) *recipeRouterTestHarness {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 
-	db, err := gorm.Open(sqlite.Open(filepath.Join(t.TempDir(), "recipe-test.db")), &gorm.Config{})
+	db, err := gorm.Open(
+		sqlite.Open(filepath.Join(t.TempDir(), "recipe-test.db")),
+		&gorm.Config{},
+	)
 	if err != nil {
 		t.Fatalf("failed to open test db: %v", err)
 	}
-	if err := db.AutoMigrate(&domainchef.Chef{}, &domainrecipe.Recipe{}, &domainrecipe.Ingredient{}, &domainrecipe.Step{}, &domainrecipe.RecipeLike{}, &domainrecipe.RecipeComment{}); err != nil {
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		t.Fatalf("failed to get underlying database connection: %v", err)
+	}
+
+	t.Cleanup(func() {
+		sqlDB.Close()
+	})
+
+	if err := db.AutoMigrate(
+		&domainchef.Chef{},
+		&domainrecipe.Recipe{},
+		&domainrecipe.Ingredient{},
+		&domainrecipe.Step{},
+		&domainrecipe.RecipeLike{},
+		&domainrecipe.RecipeComment{},
+	); err != nil {
 		t.Fatalf("failed to migrate test db: %v", err)
 	}
 
@@ -44,7 +64,11 @@ func setupRecipeRouterTest(t *testing.T) *recipeRouterTestHarness {
 	router := gin.New()
 	httppkg.RegisterRecipeRoutes(router, service, authProvider, chefRepo)
 
-	return &recipeRouterTestHarness{router: router, authProvider: authProvider, chefRepo: chefRepo}
+	return &recipeRouterTestHarness{
+		router:       router,
+		authProvider: authProvider,
+		chefRepo:     chefRepo,
+	}
 }
 
 func (h *recipeRouterTestHarness) createChef(t *testing.T, firstName, lastName, email string) uint {

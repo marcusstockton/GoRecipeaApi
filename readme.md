@@ -134,9 +134,9 @@ The API will start on `localhost:8080`
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---|
-| GET | `/chef` | List all chefs | No |
+| GET | `/chef/` | List all chefs | No |
 | GET | `/chef/:id` | Get a specific chef by ID | No |
-| POST | `/chef` | Create a new chef (register) | No |
+| POST | `/chef/` | Create a new chef (register) | No |
 | PUT | `/chef/:id` | Update chef profile | No |
 | POST | `/chef/login` | Login and receive JWT token | No |
 | GET | `/chef/validate` | Validate JWT token | Yes |
@@ -175,16 +175,16 @@ The API will start on `localhost:8080`
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---|
-| GET | `/recipe` | List all recipes | No |
+| GET | `/recipe/` | List all recipes | No |
 | GET | `/recipe/:id` | Get a specific recipe by ID | No |
-| POST | `/recipe` | Create a new recipe | Yes |
+| GET | `/recipe/:id/comments` | List comments for a recipe | No |
+| POST | `/recipe/` | Create a new recipe | Yes |
 | PUT | `/recipe/:id` | Update a recipe | Yes |
 | DELETE | `/recipe/:id` | Delete a recipe | Yes |
 | POST | `/recipe/:id/like` | Like a recipe | Yes |
 | DELETE | `/recipe/:id/like` | Remove your like from a recipe | Yes |
 | POST | `/recipe/:id/comment` | Add a comment or reply to a comment | Yes |
-| GET | `/recipe/:id/comments` | List comments for a recipe | No |
-| DELETE | `/comment/:commentID` | Delete your own comment | Yes |
+| DELETE | `/recipe/comment/:commentID` | Delete your own comment | Yes |
 
 #### Recipe Request/Response Examples
 
