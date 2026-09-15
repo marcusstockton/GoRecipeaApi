@@ -11,6 +11,7 @@ type Config struct {
 	JWTSecret    string
 	DatabasePath string
 	GinMode      string
+	LogLevel     string
 }
 
 func Load() Config {
@@ -20,6 +21,7 @@ func Load() Config {
 		JWTSecret:    envOrDefault("JWT_SECRET", "change-me-in-production"),
 		DatabasePath: envOrDefault("DATABASE_PATH", "database/database.db"),
 		GinMode:      envOrDefault("GIN_MODE", "debug"),
+		LogLevel:     envOrDefault("LOG_LEVEL", "info"),
 	}
 }
 
