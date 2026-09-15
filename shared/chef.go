@@ -1,11 +1,7 @@
-package domain
+package shared
 
-import "gorm.io/gorm"
+import domainchef "recipea.com/m/domain/chef"
 
-type Chef struct {
-	gorm.Model
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email" gorm:"unique"`
-	Password  string `json:"password"`
-}
+// Deprecated: keep this alias only for backward compatibility.
+// Domain ownership lives in the domain layer; this package should not define entities.
+type Chef = domainchef.Chef

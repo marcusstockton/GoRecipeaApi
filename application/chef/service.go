@@ -4,14 +4,22 @@ import (
 	domain "recipea.com/m/domain/chef"
 )
 
-type ChefService struct {
-	Repo  domain.Repository
-	Token TokenProvider
+type Repository interface {
+	Save(chef *domain.Chef) error
+	FindByID(id uint) (*domain.Chef, error)
+	FindByEmail(email string) (*domain.Chef, error)
+	Delete(id uint) error
+	List() ([]domain.Chef, error)
 }
 
 type TokenProvider interface {
 	CreateToken(subject uint) (string, error)
 	ParseToken(token string) (uint, error)
+}
+
+type ChefService struct {
+	Repo  Repository
+	Token TokenProvider
 }
 
 type CreateChefRequest struct {
@@ -36,7 +44,7 @@ type ChefResponse struct {
 	Email     string
 }
 
-func NewChefService(repo domain.Repository, token TokenProvider) *ChefService {
+func NewChefService(repo Repository, token TokenProvider) *ChefService {
 	return &ChefService{Repo: repo, Token: token}
 }
 

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"recipea.com/m/config"
 )
 
 type JWTProvider struct {
@@ -53,9 +54,8 @@ func (j *JWTProvider) ParseToken(tokenString string) (uint, error) {
 }
 
 func DefaultSecret() string {
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		return "your-secret-key"
+	if secret := os.Getenv("JWT_SECRET"); secret != "" {
+		return secret
 	}
-	return secret
+	return config.Load().JWTSecret
 }

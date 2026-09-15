@@ -27,6 +27,16 @@ type stepItem struct {
 	Action string `json:"action" binding:"required"`
 }
 
+type recipeResponseDTO struct {
+	ID          uint                      `json:"id"`
+	Title       string                    `json:"title"`
+	Description string                    `json:"description"`
+	OwnedBy     uint                      `json:"owned_by"`
+	Ingredients []domainrecipe.Ingredient `json:"ingredients"`
+	Steps       []domainrecipe.Step       `json:"steps"`
+	LikeCount   int                       `json:"like_count"`
+}
+
 type createRecipeRequest struct {
 	Title       string           `json:"title" binding:"required"`
 	Description string           `json:"description"`

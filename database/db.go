@@ -12,11 +12,13 @@ import (
 
 var DB *gorm.DB
 
-func InitDB() {
-	dbPath := "database/database.db"
+func InitDB(path string) {
+	if path == "" {
+		path = "database/database.db"
+	}
 
 	var err error
-	DB, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+	DB, err = gorm.Open(sqlite.Open(path), &gorm.Config{
 		Logger:      logger.Default.LogMode(logger.Info),
 		PrepareStmt: true,
 	})

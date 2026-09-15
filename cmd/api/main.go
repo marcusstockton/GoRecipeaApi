@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	appchef "recipea.com/m/application/chef"
 	apprecipe "recipea.com/m/application/recipe"
+	"recipea.com/m/config"
 	"recipea.com/m/database"
 	"recipea.com/m/domain/chef"
 	"recipea.com/m/domain/recipe"
@@ -12,15 +13,16 @@ import (
 	httppkg "recipea.com/m/interfaces/http"
 )
 
-func init() {
-	database.InitDB()
+func main() {
+	cfg := config.Load()
+	gin.SetMode(cfg.GinMode)
+
+	database.InitDB(cfg.DatabasePath)
 	database.DB.AutoMigrate(&chef.Chef{}, &recipe.Recipe{}, &recipe.Ingredient{}, &recipe.Step{}, &recipe.RecipeLike{}, &recipe.RecipeComment{})
 	_ = database.Seed()
-}
 
-func main() {
 	router := gin.Default()
-	jwtProvider := auth.NewJWTProvider(auth.DefaultSecret())
+	jwtProvider := auth.NewJWTProvider(cfg.JWTSecret)
 	chefRepo := persistence.NewChefRepository(database.DB)
 	chefService := appchef.NewChefService(chefRepo, jwtProvider)
 
@@ -31,7 +33,7 @@ func main() {
 	httppkg.RegisterRecipeRoutes(router, recipeService, jwtProvider, chefRepo)
 	router.GET("/", homePage)
 
-	router.Run("localhost:8080")
+	router.Run(cfg.Addr())
 }
 
 func homePage(c *gin.Context) {

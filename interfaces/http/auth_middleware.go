@@ -5,11 +5,13 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	appauth "recipea.com/m/application/auth"
 	"recipea.com/m/domain/chef"
 	"recipea.com/m/infrastructure/auth"
 )
 
 func RequireAuth(provider *auth.JWTProvider, repo chef.Repository) gin.HandlerFunc {
+	authService := appauth.NewAuthService(provider, repo)
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -18,15 +20,9 @@ func RequireAuth(provider *auth.JWTProvider, repo chef.Repository) gin.HandlerFu
 			return
 		}
 		token := strings.TrimPrefix(authHeader, "Bearer ")
-		userID, err := provider.ParseToken(token)
+		user, err := authService.Authenticate(token)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
-			c.Abort()
-			return
-		}
-		user, err := repo.FindByID(userID)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token or user not found"})
 			c.Abort()
 			return
 		}

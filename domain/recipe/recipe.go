@@ -1,6 +1,9 @@
 package recipe
 
-import "time"
+import (
+	"strings"
+	"time"
+)
 
 type Ingredient struct {
 	ID          uint   `gorm:"primaryKey" json:"id"`
@@ -94,5 +97,57 @@ func (r *Recipe) Update(title, description string, ingredients []Ingredient, ste
 	r.Description = description
 	r.Ingredients = ingredients
 	r.Steps = steps
+	return nil
+}
+
+func (r *Recipe) CanUserLike(chefID uint) error {
+	if chefID == 0 {
+		return ErrInvalidInput
+	}
+	if r.OwnedBy == chefID {
+		return ErrSelfLikeNotAllowed
+	}
+	for _, like := range r.Likes {
+		if like.ChefID == chefID {
+			return ErrDuplicateLike
+		}
+	}
+	return nil
+}
+
+func (r *Recipe) CanRemoveLike(chefID uint) error {
+	if chefID == 0 {
+		return ErrInvalidInput
+	}
+	if len(r.Likes) == 0 {
+		return ErrNotFound
+	}
+	for _, like := range r.Likes {
+		if like.ChefID == chefID {
+			return nil
+		}
+	}
+	return ErrNotAuthorized
+}
+
+func (r *Recipe) CanAddComment(chefID uint, content string, parentCommentID *uint) error {
+	if chefID == 0 {
+		return ErrInvalidInput
+	}
+	trimmed := strings.TrimSpace(content)
+	if trimmed == "" {
+		return ErrEmptyComment
+	}
+	if parentCommentID != nil {
+		for _, comment := range r.Comments {
+			if comment.ID == *parentCommentID {
+				if comment.RecipeID != r.ID {
+					return ErrInvalidInput
+				}
+				return nil
+			}
+		}
+		return ErrNotFound
+	}
 	return nil
 }

@@ -6,6 +6,19 @@ import (
 	domainrecipe "recipea.com/m/domain/recipe"
 )
 
+type Repository interface {
+	Save(*domainrecipe.Recipe) error
+	FindByID(uint) (*domainrecipe.Recipe, error)
+	List() ([]domainrecipe.Recipe, error)
+	Delete(uint) error
+	AddLike(uint, uint) error
+	RemoveLike(uint, uint) error
+	AddComment(uint, uint, string, *uint) error
+	RemoveComment(uint, uint) error
+	FindCommentByID(uint) (*domainrecipe.RecipeComment, error)
+	ListComments(uint) ([]domainrecipe.RecipeComment, error)
+}
+
 type CreateRecipeRequest struct {
 	Title       string
 	Description string
@@ -34,10 +47,10 @@ type RecipeResponse struct {
 }
 
 type RecipeService struct {
-	Repo domainrecipe.Repository
+	Repo Repository
 }
 
-func NewRecipeService(repo domainrecipe.Repository) *RecipeService {
+func NewRecipeService(repo Repository) *RecipeService {
 	return &RecipeService{Repo: repo}
 }
 
@@ -112,54 +125,36 @@ func (s *RecipeService) DeleteRecipe(id, requestingChefID uint) error {
 }
 
 func (s *RecipeService) AddLike(recipeID, chefID uint) error {
-	if chefID == 0 {
-		return domainrecipe.ErrInvalidInput
-	}
 	recipe, err := s.Repo.FindByID(recipeID)
 	if err != nil {
 		return err
 	}
-	if recipe.OwnedBy == chefID {
-		return domainrecipe.ErrSelfLikeNotAllowed
-	}
-	for _, like := range recipe.Likes {
-		if like.ChefID == chefID {
-			return domainrecipe.ErrDuplicateLike
-		}
+	if err := recipe.CanUserLike(chefID); err != nil {
+		return err
 	}
 	return s.Repo.AddLike(recipeID, chefID)
 }
 
 func (s *RecipeService) RemoveLike(recipeID, chefID uint) error {
-	if chefID == 0 {
-		return domainrecipe.ErrInvalidInput
-	}
 	recipe, err := s.Repo.FindByID(recipeID)
 	if err != nil {
 		return err
 	}
-	for _, like := range recipe.Likes {
-		if like.ChefID == chefID {
-			return s.Repo.RemoveLike(recipeID, chefID)
-		}
+	if err := recipe.CanRemoveLike(chefID); err != nil {
+		return err
 	}
-	if len(recipe.Likes) > 0 {
-		return domainrecipe.ErrNotAuthorized
-	}
-	return domainrecipe.ErrNotFound
+	return s.Repo.RemoveLike(recipeID, chefID)
 }
 
 func (s *RecipeService) AddComment(recipeID, chefID uint, content string, parentCommentID *uint) error {
-	if chefID == 0 {
-		return domainrecipe.ErrInvalidInput
-	}
-	trimmed := strings.TrimSpace(content)
-	if trimmed == "" {
-		return domainrecipe.ErrEmptyComment
-	}
-	if _, err := s.Repo.FindByID(recipeID); err != nil {
+	recipe, err := s.Repo.FindByID(recipeID)
+	if err != nil {
 		return err
 	}
+	if err := recipe.CanAddComment(chefID, content, nil); err != nil {
+		return err
+	}
+	trimmed := strings.TrimSpace(content)
 	if parentCommentID != nil {
 		parentComment, err := s.Repo.FindCommentByID(*parentCommentID)
 		if err != nil {
