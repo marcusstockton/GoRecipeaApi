@@ -8,6 +8,8 @@ import (
 )
 
 func RegisterHealthRoutes(router *gin.Engine) {
+	// Liveness check: confirms the process is running. This implementation also
+	// checks the database, although liveness checks are usually dependency-free.
 	router.GET("/health", func(c *gin.Context) {
 		db, err := database.DB.DB()
 		if err != nil || db == nil {
@@ -21,6 +23,7 @@ func RegisterHealthRoutes(router *gin.Engine) {
 		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
 	})
 
+	// Readiness check: confirms the service and its database are ready to receive traffic.
 	router.GET("/ready", func(c *gin.Context) {
 		if database.DB == nil {
 			c.JSON(http.StatusServiceUnavailable, gin.H{"status": "not ready"})
