@@ -84,6 +84,9 @@ GoRecipeaApi/
 │   └── requireAuth.go
 ├── shared/
 │   └── chef.go
+├── .env.dev
+├── .env.uat
+├── .env.prod
 ├── api.http
 ├── go.mod
 ├── go.sum
@@ -93,31 +96,72 @@ GoRecipeaApi/
 
 ## Runtime Configuration
 
-The service is configured through environment variables:
+The service is configured through environment variables and environment-specific files:
 
+- `.env.dev` for local development
+- `.env.uat` for the UAT environment
+- `.env.prod` for production
+
+The supported configuration values are:
+
+- APP_ENV: default `dev`
 - HOST: default `0.0.0.0`
 - PORT: default `8080`
 - JWT_SECRET: default `change-me-in-production`
 - DATABASE_PATH: default `database/database.db`
-- GIN_MODE: default `debug`
-- LOG_LEVEL: default `info`
+- GIN_MODE: defaults to `debug` for `dev`, `release` for `uat` and `prod`
+- LOG_LEVEL: defaults to `debug` for `dev`, `info` for `uat`, `warn` for `prod`
 
-Example:
+Example `.env.dev`:
 
-```bash
-export HOST=0.0.0.0
-export PORT=8080
-export JWT_SECRET=your-secret
-export DATABASE_PATH=database/database.db
-export GIN_MODE=debug
-export LOG_LEVEL=info
+```env
+APP_ENV=dev
+HOST=0.0.0.0
+PORT=8080
+JWT_SECRET=dev-secret-change-me
+DATABASE_PATH=database/database.db
+GIN_MODE=debug
+LOG_LEVEL=debug
 ```
+
+Example `.env.uat`:
+
+```env
+APP_ENV=uat
+HOST=0.0.0.0
+PORT=8080
+JWT_SECRET=uat-secret-change-me
+DATABASE_PATH=database/uat.db
+GIN_MODE=release
+LOG_LEVEL=info
+```
+
+Example `.env.prod`:
+
+```env
+APP_ENV=prod
+HOST=0.0.0.0
+PORT=8080
+JWT_SECRET=replace-with-real-prod-secret
+DATABASE_PATH=database/prod.db
+GIN_MODE=release
+LOG_LEVEL=warn
+```
+
+Use the environment file that matches the target deployment and load it before starting the app. Keep secrets out of source control and prefer your hosting platform's environment variables or secret manager for UAT and production.
 
 ## Running the Service
 
+For local development:
+
 ```bash
+set -a
+. ./.env.dev
+set +a
 go run ./cmd/api/main.go
 ```
+
+For UAT or production, load the appropriate file or inject the variables through your hosting platform before starting the service.
 
 The server binds to the configured host and port, defaulting to:
 

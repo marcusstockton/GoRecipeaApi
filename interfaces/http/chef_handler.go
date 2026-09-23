@@ -22,13 +22,6 @@ type createChefRequest struct {
 	Password  string `json:"password" binding:"required,min=8"`
 }
 
-type chefResponseDTO struct {
-	ID        uint   `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email"`
-}
-
 type loginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`

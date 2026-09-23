@@ -2,6 +2,8 @@ package database
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
@@ -15,6 +17,14 @@ var DB *gorm.DB
 func InitDB(path string) {
 	if path == "" {
 		path = "database/database.db"
+	}
+	if path != ":memory:" && path != "file::memory:?cache=shared" {
+		dir := filepath.Dir(path)
+		if dir != "." && dir != "" {
+			if err := os.MkdirAll(dir, 0o755); err != nil {
+				panic(err)
+			}
+		}
 	}
 
 	var err error

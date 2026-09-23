@@ -22,6 +22,7 @@ func main() {
 	logging.Init(cfg.LogLevel)
 
 	slog.Info("starting application", "host", cfg.Host, "port", cfg.Port, "database_path", cfg.DatabasePath)
+	slog.Info("resolved database path", "path", cfg.DatabasePath)
 
 	database.InitDB(cfg.DatabasePath)
 	database.DB.AutoMigrate(&chef.Chef{}, &recipe.Recipe{}, &recipe.Ingredient{}, &recipe.Step{}, &recipe.RecipeLike{}, &recipe.RecipeComment{})
