@@ -1,4 +1,4 @@
-@jwt_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3ODU5NDM3NDgsInN1YiI6MX0.Jl-ekADDn6fxCUJUX4lSgmcKTjP7mDqDoTpzLeWlpxg
+@jwt_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3OTAyNjg4NDUsInN1YiI6Mn0.OK3i-tRBLrKyDfg7ftVlhm9iWqngcJ_LZNgfmjJKhRM
 
 ### Health check
 GET http://localhost:8080/
@@ -17,10 +17,10 @@ POST http://localhost:8080/chef
 Content-Type: application/json
 
 {
-  "first_name": "Gordon",
-  "last_name": "Ramsay",
-  "email": "gordon@example.com",
-  "password": "securePassword123"
+  "first_name": "Martha",
+  "last_name": "Stewart",
+  "email": "martha@stewart.com",
+  "password": "TastySnacks2026"
 }
 
 ### Login chef
@@ -28,8 +28,8 @@ POST http://localhost:8080/chef/login
 Content-Type: application/json
 
 {
-  "email": "gordon@example.com",
-  "password": "securePassword123"
+  "email": "martha@stewart.com",
+  "password": "TastySnacks2026"
 }
 
 ### Validate JWT token
@@ -63,29 +63,65 @@ Content-Type: application/json
 Authorization: Bearer {{jwt_token}}
 
 {
-  "title": "Chocolate Cake",
-  "description": "A delicious homemade chocolate cake",
+  "title": "Spaghetti aglio e olio",
+  "description": "classic Italian pasta dish originating from Naples, Italy, translating literally to \"garlic and oil.\" It is a quintessential example of cucina povera (poor cooking), relying on simple, pantry-staple ingredients to create a rich, aromatic meal.",
   "ingredients": [
     {
-      "quantity": "2",
-      "unit": "cups",
-      "name": "flour",
-      "preparation": "sifted"
+      "quantity": "1",
+      "unit": "pound",
+      "name": "spaghetti"
     },
     {
       "quantity": "1",
       "unit": "cup",
-      "name": "sugar"
+      "name": "garlic"
+    },
+    {
+      "quantity": "1",
+      "unit": "1/2 cup",
+      "name": "olive oil"
+    },
+    {
+      "quantity": "1",
+      "unit": "1 tsp",
+      "name": "red pepper flakes"
+    },
+    {
+      "quantity": "1",
+      "unit": "to taste",
+      "name": "salt"
+    },
+    {
+      "quantity": "1",
+      "unit": "to taste",
+      "name": "black pepper"
+    },
+    {
+      "quantity": "1",
+      "unit": "bunch",
+      "name": "fresh parsley, chopped"
     }
   ],
   "steps": [
     {
       "order": 1,
-      "action": "Preheat oven to 350°F"
+      "action": "Gather all the ingredients."
     },
     {
       "order": 2,
-      "action": "Mix dry ingredients in a bowl"
+      "action": "Bring a large pot of lightly salted water to a boil. Cook spaghetti in the boiling water, stirring occasionally until cooked through but firm to the bite, about 10 to 12 minutes. Drain and transfer to a pasta bowl."
+    },
+    {
+      "order": 3,
+      "action": "While the pasta is cooking, heat olive oil in a large skillet over medium heat. Add garlic and red pepper flakes, and sauté until the garlic is golden brown, about 2 minutes."
+    },
+    {
+      "order": 4,
+      "action": "Pour the garlic and oil mixture over the cooked spaghetti. Toss to coat the pasta evenly."
+    },
+    {
+      "order": 5,
+      "action": "Season with salt and black pepper to taste. Sprinkle with chopped fresh parsley before serving."
     }
   ]
 }

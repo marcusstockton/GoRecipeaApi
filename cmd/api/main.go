@@ -21,10 +21,10 @@ func main() {
 	gin.SetMode(cfg.GinMode)
 	logging.Init(cfg.LogLevel)
 
-	slog.Info("starting application", "host", cfg.Host, "port", cfg.Port, "database_path", cfg.DatabasePath)
-	slog.Info("resolved database path", "path", cfg.DatabasePath)
+	slog.Info("starting application", "host", cfg.Host, "port", cfg.Port, "database_dsn", cfg.DatabaseDSN)
+	slog.Info("resolved database dsn", "dsn", cfg.DatabaseDSN)
 
-	database.InitDB(cfg.DatabasePath)
+	database.InitDB(cfg.DatabaseDSN)
 	database.DB.AutoMigrate(&chef.Chef{}, &recipe.Recipe{}, &recipe.Ingredient{}, &recipe.Step{}, &recipe.RecipeLike{}, &recipe.RecipeComment{})
 	if err := database.Seed(); err != nil {
 		slog.Error("database seed failed", "error", err)

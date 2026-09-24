@@ -1,0 +1,107 @@
+services:
+  postgres-dev:
+    image: postgres:16
+    profiles: ["dev"]
+    container_name: recipea-postgres-dev
+    environment:
+      POSTGRES_DB: recipea_dev
+      POSTGRES_USER: recipea
+      POSTGRES_PASSWORD: recipea
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recipea -d recipea_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+
+  api-dev:
+    build: .
+    profiles: ["dev"]
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
+    environment:
+      APP_ENV: dev
+      DATABASE_DSN: host=postgres-dev user=recipea password=recipea dbname=recipea_dev port=5432 sslmode=disable
+      JWT_SECRET: dev-change-me
+      GIN_MODE: debug
+      LOG_LEVEL: debug
+    ports:
+      - "8080:8080"
+
+  postgres-uat:
+    image: postgres:16
+    profiles: ["uat"]
+    container_name: recipea-postgres-uat
+    environment:
+      POSTGRES_DB: recipea_uat
+      POSTGRES_USER: recipea
+      POSTGRES_PASSWORD: recipea
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recipea -d recipea_uat"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    volumes:
+      - postgres_uat_data:/var/lib/postgresql/data
+
+  api-uat:
+    build: .
+    profiles: ["uat"]
+    depends_on:
+      postgres-uat:
+        condition: service_healthy
+    environment:
+      APP_ENV: uat
+      DATABASE_DSN: host=postgres-uat user=recipea password=recipea dbname=recipea_uat port=5432 sslmode=disable
+      JWT_SECRET: uat-change-me
+      GIN_MODE: release
+      LOG_LEVEL: info
+    ports:
+      - "8081:8080"
+
+  postgres-prod:
+    image: postgres:16
+    profiles: ["prod"]
+    container_name: recipea-postgres-prod
+    environment:
+      POSTGRES_DB: recipea_prod
+      POSTGRES_USER: recipea
+      POSTGRES_PASSWORD: recipea
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U recipea -d recipea_prod"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+
+  api-prod:
+    build: .
+    profiles: ["prod"]
+    depends_on:
+      postgres-prod:
+        condition: service_healthy
+    environment:
+      APP_ENV: prod
+      DATABASE_DSN: host=postgres-prod user=recipea password=recipea dbname=recipea_prod port=5432 sslmode=disable
+      JWT_SECRET: prod-change-me
+      GIN_MODE: release
+      LOG_LEVEL: warn
+    ports:
+      - "8082:8080"
+
+volumes:
+  postgres_dev_data:
+  postgres_uat_data:
+  postgres_prod_data:

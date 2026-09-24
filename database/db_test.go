@@ -1,23 +1,23 @@
 package database
 
 import (
-	"path/filepath"
+	"strings"
 	"testing"
 )
 
-func TestInitDBCreatesParentDirectories(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "nested", "envs", "app.db")
+func TestDefaultDSNUsesPostgresSettings(t *testing.T) {
+	dsn := defaultDSN()
 
-	InitDB(path)
-	if DB == nil {
-		t.Fatal("expected database connection to be initialized")
-	}
-
-	if _, err := DB.DB(); err != nil {
-		t.Fatalf("expected database connection to be usable: %v", err)
-	}
-
-	if sqlDB, err := DB.DB(); err == nil {
-		sqlDB.Close()
+	for _, want := range []string{
+		"host=localhost",
+		"user=recipea",
+		"password=recipea",
+		"dbname=recipea_dev",
+		"port=5432",
+		"sslmode=disable",
+	} {
+		if !strings.Contains(dsn, want) {
+			t.Fatalf("default DSN missing %q in %q", want, dsn)
+		}
 	}
 }

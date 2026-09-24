@@ -27,10 +27,11 @@ This project follows a pragmatic DDD layering pattern:
 
 - Go
 - Gin web framework
-- GORM + SQLite
+- GORM + PostgreSQL
 - golang-jwt/jwt
 - bcrypt for password hashing
 - structured logging via slog
+- Docker Compose for local service orchestration
 
 ## Project Structure
 
@@ -50,7 +51,8 @@ GoRecipeaApi/
 ├── config/
 │   └── config.go
 ├── database/
-│   └── db.go
+│   ├── db.go
+│   └── db_test.go
 ├── domain/
 │   ├── chef/
 │   │   ├── chef.go
@@ -80,88 +82,121 @@ GoRecipeaApi/
 │       ├── recipe_handler.go
 │       ├── recipe_handler_test.go
 │       └── auth_middleware_test.go
-├── middleware/
-│   └── requireAuth.go
 ├── shared/
 │   └── chef.go
-├── .env.dev
-├── .env.uat
-├── .env.prod
+├── .env
+├── .env.example
+├── Dockerfile
+├── docker-compose.yml
 ├── api.http
 ├── go.mod
 ├── go.sum
 ├── readme.md
-└── .env.example (if configured in your environment)
+└── .gitignore
 ```
 
 ## Runtime Configuration
 
-The service is configured through environment variables and environment-specific files:
+This service uses Postgres as the runtime database for all non-test environments. SQLite is still used in local test scenarios only when needed, but the application itself is configured around a Postgres DSN.
 
-- `.env.dev` for local development
-- `.env.uat` for the UAT environment
-- `.env.prod` for production
+Recommended environment variables:
 
-The supported configuration values are:
-
-- APP_ENV: default `dev`
+- APP_ENV: `dev`, `uat`, or `prod`
 - HOST: default `0.0.0.0`
 - PORT: default `8080`
-- JWT_SECRET: default `change-me-in-production`
-- DATABASE_PATH: default `database/database.db`
+- JWT_SECRET: secret used to sign JWTs
+- DATABASE_DSN: Postgres connection string
 - GIN_MODE: defaults to `debug` for `dev`, `release` for `uat` and `prod`
 - LOG_LEVEL: defaults to `debug` for `dev`, `info` for `uat`, `warn` for `prod`
 
-Example `.env.dev`:
+Example `.env.example`:
 
 ```env
 APP_ENV=dev
 HOST=0.0.0.0
 PORT=8080
-JWT_SECRET=dev-secret-change-me
-DATABASE_PATH=database/database.db
+JWT_SECRET=change-me-in-dev
+DATABASE_DSN=host=localhost user=recipea password=recipea dbname=recipea_dev port=5432 sslmode=disable
 GIN_MODE=debug
 LOG_LEVEL=debug
 ```
 
-Example `.env.uat`:
-
-```env
-APP_ENV=uat
-HOST=0.0.0.0
-PORT=8080
-JWT_SECRET=uat-secret-change-me
-DATABASE_PATH=database/uat.db
-GIN_MODE=release
-LOG_LEVEL=info
-```
-
-Example `.env.prod`:
-
-```env
-APP_ENV=prod
-HOST=0.0.0.0
-PORT=8080
-JWT_SECRET=replace-with-real-prod-secret
-DATABASE_PATH=database/prod.db
-GIN_MODE=release
-LOG_LEVEL=warn
-```
-
-Use the environment file that matches the target deployment and load it before starting the app. Keep secrets out of source control and prefer your hosting platform's environment variables or secret manager for UAT and production.
+Use a real `.env` file locally, but do not commit secrets. In UAT and production, prefer your deployment platform's environment variables or a secrets manager.
 
 ## Running the Service
 
-For local development:
+### Local development with Docker Compose
+
+Start the dev stack:
+
+```bash
+docker compose --profile dev up --build
+```
+
+This starts:
+
+- Postgres on `localhost:5432`
+- API on `http://localhost:8080`
+- database name: `recipea_dev`
+
+Stop the dev stack:
+
+```bash
+docker compose --profile dev down
+```
+
+Stop and remove the dev database volume:
+
+```bash
+docker compose --profile dev down -v
+```
+
+Check the running containers:
+
+```bash
+docker compose --profile dev ps
+```
+
+Connect to the database from the host:
+
+```bash
+docker exec -it recipea-postgres-dev psql -U recipea -d recipea_dev
+```
+
+Query the seeded data:
+
+```bash
+docker exec -it recipea-postgres-dev psql -U recipea -d recipea_dev -c "SELECT * FROM recipes;"
+```
+
+### UAT
+
+```bash
+docker compose --profile uat up --build
+```
+
+- Postgres: port `5433`
+- API: port `8081`
+- DB name: `recipea_uat`
+
+### Production
+
+```bash
+docker compose --profile prod up --build
+```
+
+- Postgres: port `5434`
+- API: port `8082`
+- DB name: `recipea_prod`
+
+### Local Go run outside Docker
 
 ```bash
 set -a
-. ./.env.dev
+. ./.env
 set +a
 go run ./cmd/api/main.go
 ```
-
-For UAT or production, load the appropriate file or inject the variables through your hosting platform before starting the service.
 
 The server binds to the configured host and port, defaulting to:
 
@@ -260,6 +295,38 @@ The domain currently enforces:
 ## Development Notes
 
 This service is intentionally structured as a demonstration of DDD principles in Go, but it remains a pragmatic implementation rather than a heavy enterprise framework stack. It is well suited as a learning reference or a foundational microservice skeleton.
+
+## Database Migrations
+
+At the moment, the service uses GORM `AutoMigrate` during startup. That is fine for early-stage local development, but it is not a long-term migration strategy for shared environments because schema changes are applied implicitly and are harder to review, roll back, or audit.
+
+### Recommended future approach
+
+Use versioned SQL migration files managed by a tool such as `golang-migrate/migrate`.
+
+Typical pattern:
+
+1. Create a migration file with a name like:
+   - `001_create_chefs_table.up.sql`
+   - `001_create_chefs_table.down.sql`
+2. Run migrations in CI/CD or during deployment before the app starts.
+3. Keep migration history in version control.
+4. Never change a past migration; add a new migration instead.
+
+Example flow:
+
+```bash
+migrate -database "$DATABASE_DSN" -path ./migrations up
+```
+
+Then keep the app startup focused on booting the service rather than changing the schema on the fly.
+
+### Practical recommendation for this repo
+
+- keep `AutoMigrate` only while the project is in active prototyping
+- add a `migrations/` folder once the schema stabilizes
+- use a migration tool in UAT and prod pipelines
+- test migration scripts in a disposable database before release
 
 ## Testing
 

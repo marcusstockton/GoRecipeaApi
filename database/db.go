@@ -2,10 +2,8 @@ package database
 
 import (
 	"errors"
-	"os"
-	"path/filepath"
 
-	"github.com/glebarez/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"recipea.com/m/domain/chef"
@@ -14,21 +12,17 @@ import (
 
 var DB *gorm.DB
 
-func InitDB(path string) {
-	if path == "" {
-		path = "database/database.db"
-	}
-	if path != ":memory:" && path != "file::memory:?cache=shared" {
-		dir := filepath.Dir(path)
-		if dir != "." && dir != "" {
-			if err := os.MkdirAll(dir, 0o755); err != nil {
-				panic(err)
-			}
-		}
+func defaultDSN() string {
+	return "host=localhost user=recipea password=recipea dbname=recipea_dev port=5432 sslmode=disable"
+}
+
+func InitDB(dsn string) {
+	if dsn == "" {
+		dsn = defaultDSN()
 	}
 
 	var err error
-	DB, err = gorm.Open(sqlite.Open(path), &gorm.Config{
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger:      logger.Default.LogMode(logger.Info),
 		PrepareStmt: true,
 	})
