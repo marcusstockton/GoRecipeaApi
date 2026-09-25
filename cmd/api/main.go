@@ -26,7 +26,9 @@ func main() {
 
 	database.InitDB(cfg.DatabaseDSN)
 	database.DB.AutoMigrate(&chef.Chef{}, &recipe.Recipe{}, &recipe.Ingredient{}, &recipe.Step{}, &recipe.RecipeLike{}, &recipe.RecipeComment{})
-	if err := database.Seed(); err != nil {
+	if cfg.AppEnv == "prod" {
+		slog.Info("skipping database seed in production environment")
+	} else if err := database.Seed(); err != nil {
 		slog.Error("database seed failed", "error", err)
 	}
 
