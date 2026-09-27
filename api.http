@@ -1,3 +1,5 @@
+## Requires the extension REST Client from Huachao Mao
+
 @jwt_token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3OTAyNjg4NDUsInN1YiI6Mn0.OK3i-tRBLrKyDfg7ftVlhm9iWqngcJ_LZNgfmjJKhRM
 
 ### Health check
