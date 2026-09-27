@@ -2,6 +2,8 @@ package database
 
 import (
 	"errors"
+	"os"
+	"strings"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -23,11 +25,26 @@ func InitDB(dsn string) {
 
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger:      logger.Default.LogMode(logger.Info),
+		Logger:      logger.Default.LogMode(gormLogModeFromAppLogLevel(os.Getenv("LOG_LEVEL"))),
 		PrepareStmt: true,
 	})
 	if err != nil {
 		panic(err)
+	}
+}
+
+func gormLogModeFromAppLogLevel(level string) logger.LogLevel {
+	switch strings.ToLower(strings.TrimSpace(level)) {
+	case "debug":
+		return logger.Info
+	case "info":
+		return logger.Warn
+	case "warn", "warning":
+		return logger.Warn
+	case "error":
+		return logger.Error
+	default:
+		return logger.Warn
 	}
 }
 
